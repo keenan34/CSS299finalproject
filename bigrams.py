@@ -1,3 +1,3 @@
 #obamna
-#the one peice isn't real
+#the one piece isn't real
 #can we get much higher

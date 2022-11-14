@@ -2,7 +2,9 @@
 #the one piece isn't real
 #can we get much higher
 #suh dude
-
+import hw3.compute_stopwords()
+import hw3.compute_document_counts()
+import counters.CounterBasedTextCounter()
 #Tokenize Document: break up the text into strings that contain individual words
  document_collection = source.read()
         # Create an empty index. Documents will be added one at a time.
@@ -13,6 +15,7 @@
             index.add_document(transformed_doc)
         return index
 #Filter stop words: filter out all stopwords from the tokenized document i.e. words like and, or, not, etc.
+#yeeted this code from hw3
 def compute_stopwords(texts: List[str]) -> Set[str]:
     doc_counts = compute_document_counts(texts)
     total_counts = count_total_words(texts)

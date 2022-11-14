@@ -2,9 +2,7 @@
 #the one piece isn't real
 #can we get much higher
 #suh dude
-import hw3.compute_stopwords()
-import hw3.compute_document_counts()
-import counters.CounterBasedTextCounter()
+
 #Tokenize Document: break up the text into strings that contain individual words
  document_collection = source.read()
         # Create an empty index. Documents will be added one at a time.
@@ -15,7 +13,6 @@ import counters.CounterBasedTextCounter()
             index.add_document(transformed_doc)
         return index
 #Filter stop words: filter out all stopwords from the tokenized document i.e. words like and, or, not, etc.
-#yeeted this code from hw3
 def compute_stopwords(texts: List[str]) -> Set[str]:
     doc_counts = compute_document_counts(texts)
     total_counts = count_total_words(texts)
@@ -25,6 +22,21 @@ def compute_stopwords(texts: List[str]) -> Set[str]:
             stopwords.add(w)
     return stopwords
 #Identify Bigrams: find all bigrams from filtered tokenize documents AND find all bigrams in the query (in the search)
+def search(self, query: Query) -> SearchResults:
+        match_scores = defaultdict(float)
+        match_counts = defaultdict(int)
+        for term in query.terms:
+            if term not in self.term_to_doc_id_and_frequencies:
+                return SearchResults([])
+            idf = inverse_document_frequency(self.doc_counts[term], self.number_of_documents)
+            for doc_id, tf in self.term_to_doc_id_and_frequencies[term]:
+                match_counts[doc_id] += 1
+                match_scores[doc_id] += tf * idf
+        match_scores = {doc_id: score
+                        for doc_id, score in match_scores.items()
+                        if match_counts[doc_id] == len(query.terms)}
+        sorted_results = sorted(match_scores.keys(), key=match_scores.get)
+        return SearchResults(sorted_results[0:query.num_results])
 #-one way we can identify them is finding bigrams that have - (dashes) in them i.e. pre-school
 
 #Document counts

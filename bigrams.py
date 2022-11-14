@@ -2,6 +2,7 @@
 #the one piece isn't real
 #can we get much higher
 #suh dude
+import nltk
 
 #Tokenize Document: break up the text into strings that contain individual words
  document_collection = source.read()

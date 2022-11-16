@@ -4,6 +4,13 @@
 #suh dude
 import nltk
 
+#Got to use this is download nltk bigram stuff
+#nltk.download()
+
+#word_data="The best performance can bring in sky high success."
+#nltk_tokens=nltk.word_tokenize(word_data)
+#print(list(nltk.bigrams(nltk_tokens)))
+
 #Tokenize Document: break up the text into strings that contain individual words
  document_collection = source.read()
         # Create an empty index. Documents will be added one at a time.

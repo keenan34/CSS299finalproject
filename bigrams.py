@@ -11,6 +11,19 @@ import nltk
 #nltk_tokens=nltk.word_tokenize(word_data)
 #print(list(nltk.bigrams(nltk_tokens)))
 
+#THE GOD CODE
+from nltk.tokenize import word_tokenize
+# text = "to be or not to be"
+# tokens = nltk.word_tokenize(text)
+# bigrm = nltk.bigrams(tokens)
+# print(*map(' '.join, bigrm), sep=', ')
+text=" This is the best place to learn Data Science Learner This is the best place to learn Data Science Learner"
+tokens = nltk.word_tokenize(text)
+bigrams = nltk.bigrams(tokens)
+frequency = nltk.FreqDist(bigrams)
+for key,value in frequency.items():
+    print(key,value)
+
 #Tokenize Document: break up the text into strings that contain individual words
  document_collection = source.read()
         # Create an empty index. Documents will be added one at a time.

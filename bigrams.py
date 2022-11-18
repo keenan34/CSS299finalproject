@@ -17,6 +17,20 @@ from nltk.tokenize import word_tokenize
 # tokens = nltk.word_tokenize(text)
 # bigrm = nltk.bigrams(tokens)
 # print(*map(' '.join, bigrm), sep=', ')
+#corpus_text=corpus.jsonl.read();
+# tokens = nltk.word_tokenize(text)
+# bigrm = nltk.bigrams(tokens)
+# print(*map(' '.join, bigrm), sep=', ')
+text=" This is the best place to learn Data Science Learner This is the best place to learn Data Science Learner"
+tokens = nltk.word_tokenize(text)
+bigrams = nltk.bigrams(tokens)
+frequency = nltk.FreqDist(bigrams)
+for key,value in frequency.items():
+    print(key,value)
+#to be, be or, or not, not to, to be
+#word_data="The best performance can bring in sky high success."
+#nltk_tokens=nltk.word_tokenize(word_data)
+#print(list(nltk.bigrams(nltk_tokens)))
 text=" This is the best place to learn Data Science Learner This is the best place to learn Data Science Learner"
 tokens = nltk.word_tokenize(text)
 bigrams = nltk.bigrams(tokens)

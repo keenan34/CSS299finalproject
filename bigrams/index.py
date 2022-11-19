@@ -74,7 +74,7 @@ class NaiveIndexer(Indexer):
         self.index_filename = index_filename
 
     def create_index(self) -> Index:
-        return ListBasedInvertedIndexWithFrequencies(self.index_filename)
+        return BigramIndexWithFrequencies(self.index_filename)
 
 
 def term_frequency(term_count, document_length):
@@ -85,7 +85,7 @@ def inverse_document_frequency(term_document_count, number_of_document):
     return math.log(number_of_document / term_document_count)
 
 
-class ListBasedInvertedIndexWithFrequencies(Index):
+class BigramIndexWithFrequencies(Index):
     def __init__(self, filename):
         self.filename = filename
         self.number_of_documents = 0
@@ -99,8 +99,8 @@ class ListBasedInvertedIndexWithFrequencies(Index):
         term_counts = Counter(doc.tokens)
         for term, count in term_counts.items():
             self.doc_counts[term] += 1
-            self.term_to_doc_id_and_frequencies[term].append(
-                (doc.doc_id, term_frequency(count, len(doc.tokens))))
+            tf = term_frequency(count, len(doc.tokens))
+            self.term_to_doc_id_and_frequencies[term].append((doc.doc_id, tf))
 
     def read(self):
         with open(self.filename) as fp:
@@ -128,73 +128,14 @@ class ListBasedInvertedIndexWithFrequencies(Index):
                 }
                 fp.write(json.dumps(record) + '\n')
 
-    def search(self, query: Query) -> SearchResults:
+    def search(self, bigram: Query) -> SearchResults:
         match_scores = defaultdict(float)
         match_counts = defaultdict(int)
-        for term in query.terms:
-            if term not in self.term_to_doc_id_and_frequencies:
-                return SearchResults([])
-            idf = inverse_document_frequency(self.doc_counts[term], self.number_of_documents)
-            for doc_id, tf in self.term_to_doc_id_and_frequencies[term]:
-                match_counts[doc_id] += 1
-                match_scores[doc_id] += tf * idf
-        match_scores = {doc_id: score for doc_id, score in match_scores.items()
-                        if match_counts[doc_id] == len(query.terms)}
-        return SearchResults(sorted(match_scores.keys(), key=match_scores.get))
-
-
-class DictBasedInvertedIndexWithFrequencies(Index):
-    def __init__(self, filename):
-        self.filename = filename
-        self.number_of_documents = 0
-        # dict mapping a term to a list of pairs (doc_id, term_frequency)
-        self.term_to_doc_id_and_frequencies = defaultdict(dict)
-        # Count of documents each term occurs in.
-        self.doc_counts = Counter()
-
-    def add_document(self, doc: TransformedDocument) -> None:
-        self.number_of_documents += 1
-        term_counts = Counter(doc.tokens)
-        for term, count in term_counts.items():
-            self.doc_counts[term] += 1
-            self.term_to_doc_id_and_frequencies[term][doc.doc_id] = term_frequency(count, len(doc.tokens))
-
-    def read(self):
-        with open(self.filename) as fp:
-            record = json.loads(fp.readline())
-            self.number_of_documents = record['number_of_documents']
-            self.term_to_doc_id_and_frequencies = defaultdict(dict)
-            self.doc_counts = Counter()
-            for line in fp:
-                record = json.loads(line)
-                term = record['term']
-                self.doc_counts[term] = record['documents_count']
-                for sub_record in record['index']:
-                    self.term_to_doc_id_and_frequencies[term][sub_record['doc_id']] = sub_record['tf']
-
-    def write(self):
-        with open(self.filename, 'w') as fp:
-            metadata = {'number_of_documents': self.number_of_documents}
-            fp.write(json.dumps(metadata) + '\n')
-            for term, doc_count in self.doc_counts.items():
-                record = {
-                    'term': term,
-                    'documents_count': doc_count,
-                    'index': [{'doc_id': doc_id, 'tf': self.term_to_doc_id_and_frequencies[term][doc_id]}
-                              for doc_id in self.term_to_doc_id_and_frequencies[term].keys()]
-                }
-                fp.write(json.dumps(record) + '\n')
-
-    def search(self, query: Query) -> SearchResults:
-        match_scores = defaultdict(float)
-        match_counts = defaultdict(int)
-        for term in query.terms:
-            if term not in self.term_to_doc_id_and_frequencies:
-                return SearchResults([])
-            idf = inverse_document_frequency(self.doc_counts[term], self.number_of_documents)
-            for doc_id in self.term_to_doc_id_and_frequencies[term].keys():
-                match_counts[doc_id] += 1
-                match_scores[doc_id] += self.term_to_doc_id_and_frequencies[term][doc_id] * idf
-        match_scores = {doc_id: score for doc_id, score in match_scores.items()
-                        if match_counts[doc_id] == len(query.terms)}
-        return SearchResults(sorted(match_scores.keys(), key=match_scores.get))
+        if bigram not in self.term_to_doc_id_and_frequencies:
+            return SearchResults([])
+        idf = inverse_document_frequency(self.doc_counts[bigram], self.number_of_documents)
+        for doc_id, tf in self.term_to_doc_id_and_frequencies[bigram]:
+            match_counts[doc_id] += 1
+            match_scores[doc_id] += tf * idf
+        sorted_results = sorted(match_scores.keys(), key=match_scores.get)
+        return SearchResults(sorted_results)

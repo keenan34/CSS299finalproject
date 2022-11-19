@@ -4,7 +4,7 @@ import bigramTokenizer
 import documents
 
 def getInput(id: str, text: str):
-    transformer = document_transformer.BigramSearchDocumentTransformer(bigramTokenizer.BigramTokenizer)
+    transformer = document_transformer.BigramSearchDocumentTransformer(bigramTokenizer.BigramTokenizer())
     document = documents.InputDocument(doc_id=id, text=text)
     return transformer.transform_document(doc=document)
 

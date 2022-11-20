@@ -1,8 +1,15 @@
-from document_source import DocumentSource, WikiJsonDocumentSource, TrecCocidJsonlSource
+from document_source import DocumentSource, BigramJsonlSource
 from document_transformer import DocumentTransformer, BigramSearchDocumentTransformer
-from index import Index, Indexer, NaiveIndexer, DictBasedInvertedIndexWithFrequencies
+from index import Index, Indexer, NaiveIndexer
 from bigramTokenizer import BigramTokenizer
+from collections import Counter
+from typing import Dict, List
 
+class CounterBasedTextCounter():
+    def count_words(self, text: str) -> Dict[str, int]:
+        counts = Counter()
+        counts.update(BigramTokenizer().tokenize(text))
+        return counts
 
 class DefaultIndexingProcess:
     """
@@ -15,6 +22,25 @@ class DefaultIndexingProcess:
         self.document_transformer = document_transformer
         self.indexer = indexer
 
+    def count_total_words(self, texts_list: List[str]) -> Counter:
+        counts = Counter()
+        counter = CounterBasedTextCounter()
+        for text in texts_list:
+            counts.update(counter.count_words(text))
+        return counts
+
+    def compute_stopwords(self, words: [str]) -> [str]:
+        counts = self.count_total_words(words)
+        stopwords = set()
+        for count in counts.most_common(20):
+            counter = 0
+            for word in words:
+                if count[0] in word:
+                    counter += 1
+            if counter >= 9:
+                stopwords.add(count[0])
+        return stopwords
+
     def run(self, source: DocumentSource) -> Index:
         """
         Runs the Indexing Process using the supplied components.
@@ -26,9 +52,11 @@ class DefaultIndexingProcess:
         document_collection = source.read()
         # Create an empty index. Documents will be added one at a time.
         index = self.indexer.create_index()
+        everything = [doc.text for doc in document_collection]
+        stopwords = self.compute_stopwords(everything)
         for doc in document_collection:
             # Transform and index the document.
-            transformed_doc = self.document_transformer.transform_document(doc)
+            transformed_doc = self.document_transformer.transform_document(doc=doc, stopwords=stopwords)
             index.add_document(transformed_doc)
         return index
 
@@ -39,12 +67,6 @@ def create_naive_indexing_process(index_filename: str) -> DefaultIndexingProcess
         indexer=NaiveIndexer(index_filename))
 
 
-def run_naive_indexing_process(input_filename: str, output_filename: str):
-    ip = create_naive_indexing_process(output_filename)
-    index = ip.run(WikiJsonDocumentSource(input_filename))
-    index.write()
-
-
 def create_inverted_index_indexing_process(index_filename: str) -> DefaultIndexingProcess:
     return DefaultIndexingProcess(
         document_transformer=BigramSearchDocumentTransformer(tokenizer=BigramTokenizer()),
@@ -53,8 +75,8 @@ def create_inverted_index_indexing_process(index_filename: str) -> DefaultIndexi
 
 def run_inverted_index_indexing_process(input_filename: str, output_filename: str):
     ip = create_naive_indexing_process(output_filename)
-    index = ip.run(TrecCocidJsonlSource(input_filename))
+    index = ip.run(BigramJsonlSource(input_filename))
     index.write()
 
-run_inverted_index_indexing_process("corpus.jsonl", 'corpus.txt')
 
+run_inverted_index_indexing_process("corpus.jsonl", 'corpus.txt')

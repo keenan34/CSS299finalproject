@@ -33,6 +33,12 @@ class BigramSearchDocumentTransformer(DocumentTransformer):
         """
         tokens = self.tokenizer.tokenize(doc.text)
         digrams = list()
-        for i in range(len(tokens) - 1):
-            if tokens[i] not in stopwords and tokens[i+1] not in stopwords: digrams.append(tokens[i] + ' ' + tokens[i + 1])
+        if len(tokens) > 0:
+            i = 0
+            while tokens[i] in stopwords: i+=1
+            while i < len(tokens)-1:
+                preWord = tokens[i];
+                i+=1
+                if tokens[i] in stopwords: i+=1
+                else: digrams.append(preWord + ' ' + tokens[i])
         return TransformedDocument(doc_id=doc.doc_id, tokens=digrams)
